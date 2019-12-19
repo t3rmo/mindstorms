@@ -1,0 +1,151 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v2.1",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v2.1": {
+      "mindstormsFunction/1.0.0": {
+        "dependencies": {
+          "Alexa.NET.Gadgets": "1.5.0",
+          "Alexa.NET.Management": "4.0.0",
+          "Amazon.Lambda.Core": "1.1.0",
+          "Amazon.Lambda.Serialization.Json": "1.7.0"
+        },
+        "runtime": {
+          "mindstormsFunction.dll": {}
+        }
+      },
+      "Alexa.NET/1.8.2": {
+        "dependencies": {
+          "Newtonsoft.Json": "12.0.2"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Alexa.NET.dll": {
+            "assemblyVersion": "1.8.2.0",
+            "fileVersion": "1.8.2.0"
+          }
+        }
+      },
+      "Alexa.NET.Gadgets/1.5.0": {
+        "dependencies": {
+          "Alexa.NET": "1.8.2"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Alexa.NET.Gadgets.dll": {
+            "assemblyVersion": "1.5.0.0",
+            "fileVersion": "1.5.0.0"
+          }
+        }
+      },
+      "Alexa.NET.Management/4.0.0": {
+        "dependencies": {
+          "Alexa.NET": "1.8.2",
+          "Refit": "4.7.51"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Alexa.NET.Management.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "4.0.0.0"
+          }
+        }
+      },
+      "Amazon.Lambda.Core/1.1.0": {
+        "runtime": {
+          "lib/netstandard2.0/Amazon.Lambda.Core.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Amazon.Lambda.Serialization.Json/1.7.0": {
+        "dependencies": {
+          "Amazon.Lambda.Core": "1.1.0",
+          "Newtonsoft.Json": "12.0.2"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Amazon.Lambda.Serialization.Json.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.2.0.0"
+          }
+        }
+      },
+      "Newtonsoft.Json/12.0.2": {
+        "runtime": {
+          "lib/netstandard2.0/Newtonsoft.Json.dll": {
+            "assemblyVersion": "12.0.0.0",
+            "fileVersion": "12.0.2.23222"
+          }
+        }
+      },
+      "Refit/4.7.51": {
+        "dependencies": {
+          "Newtonsoft.Json": "12.0.2"
+        },
+        "runtime": {
+          "lib/netstandard2.0/Refit.dll": {
+            "assemblyVersion": "4.7.0.0",
+            "fileVersion": "4.7.51.16696"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "mindstormsFunction/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Alexa.NET/1.8.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-/7Rlv2EIUr7p3KxoVzVColqppfYQrOwIsR7Th4iFHdqfBmLDS7gGctLBY7rXaF4L8NKvyqXf0XqVzblEDI/AQA==",
+      "path": "alexa.net/1.8.2",
+      "hashPath": "alexa.net.1.8.2.nupkg.sha512"
+    },
+    "Alexa.NET.Gadgets/1.5.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-mBFLznJatHUqlRtNIpmRM045aaRFwIRN9Okl96NZd0yMSXRXOJ+KWUSNxBc0ZSkZWhvcS4OtfbGjFwslK+jTaQ==",
+      "path": "alexa.net.gadgets/1.5.0",
+      "hashPath": "alexa.net.gadgets.1.5.0.nupkg.sha512"
+    },
+    "Alexa.NET.Management/4.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-06vDUmPj/dlbQ6Hy67BXYVDj1Up9GUeoK5hZPKNcX6pXNV/NcxkFvb3r5izKjftCfsSQuKezKCIKADyNblVJjQ==",
+      "path": "alexa.net.management/4.0.0",
+      "hashPath": "alexa.net.management.4.0.0.nupkg.sha512"
+    },
+    "Amazon.Lambda.Core/1.1.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ueGId8b4DEHoVWkHDs3iAJH8IUSAUGu5AqkoI/Syl4RuByzik7lz9IjoImiGAlGhtsQV02MHNeTo04IFjS37gQ==",
+      "path": "amazon.lambda.core/1.1.0",
+      "hashPath": "amazon.lambda.core.1.1.0.nupkg.sha512"
+    },
+    "Amazon.Lambda.Serialization.Json/1.7.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-R2PD+JZnLuCnP3f8sTZEGyVexeVWxIJqQbVUbZJIEjrElE8Dbx0zTMXxKr1w1AdhRsZvL3HXpIvYywRHChPQig==",
+      "path": "amazon.lambda.serialization.json/1.7.0",
+      "hashPath": "amazon.lambda.serialization.json.1.7.0.nupkg.sha512"
+    },
+    "Newtonsoft.Json/12.0.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-rTK0s2EKlfHsQsH6Yx2smvcTCeyoDNgCW7FEYyV01drPlh2T243PR2DiDXqtC5N4GDm4Ma/lkxfW5a/4793vbA==",
+      "path": "newtonsoft.json/12.0.2",
+      "hashPath": "newtonsoft.json.12.0.2.nupkg.sha512"
+    },
+    "Refit/4.7.51": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-QQ6CBA18lvFPCGAy9c9lLSkDpGSCJhTgH5IpeiUpvrkPVOJ4ROSKwej26ulFEwYQSEIkjC3ESZ/KGHe3WbK28g==",
+      "path": "refit/4.7.51",
+      "hashPath": "refit.4.7.51.nupkg.sha512"
+    }
+  }
+}

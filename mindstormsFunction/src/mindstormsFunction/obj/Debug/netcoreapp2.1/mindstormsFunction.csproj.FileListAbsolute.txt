@@ -1,0 +1,10 @@
+C:\Users\NoChance\Desktop\mindstorms\mindstormsFunction\src\mindstormsFunction\bin\Debug\netcoreapp2.1\mindstormsFunction.deps.json
+C:\Users\NoChance\Desktop\mindstorms\mindstormsFunction\src\mindstormsFunction\bin\Debug\netcoreapp2.1\mindstormsFunction.runtimeconfig.json
+C:\Users\NoChance\Desktop\mindstorms\mindstormsFunction\src\mindstormsFunction\bin\Debug\netcoreapp2.1\mindstormsFunction.runtimeconfig.dev.json
+C:\Users\NoChance\Desktop\mindstorms\mindstormsFunction\src\mindstormsFunction\bin\Debug\netcoreapp2.1\mindstormsFunction.dll
+C:\Users\NoChance\Desktop\mindstorms\mindstormsFunction\src\mindstormsFunction\bin\Debug\netcoreapp2.1\mindstormsFunction.pdb
+C:\Users\NoChance\Desktop\mindstorms\mindstormsFunction\src\mindstormsFunction\obj\Debug\netcoreapp2.1\mindstormsFunction.csprojAssemblyReference.cache
+C:\Users\NoChance\Desktop\mindstorms\mindstormsFunction\src\mindstormsFunction\obj\Debug\netcoreapp2.1\mindstormsFunction.AssemblyInfoInputs.cache
+C:\Users\NoChance\Desktop\mindstorms\mindstormsFunction\src\mindstormsFunction\obj\Debug\netcoreapp2.1\mindstormsFunction.AssemblyInfo.cs
+C:\Users\NoChance\Desktop\mindstorms\mindstormsFunction\src\mindstormsFunction\obj\Debug\netcoreapp2.1\mindstormsFunction.dll
+C:\Users\NoChance\Desktop\mindstorms\mindstormsFunction\src\mindstormsFunction\obj\Debug\netcoreapp2.1\mindstormsFunction.pdb

@@ -27,27 +27,34 @@ namespace mindstormsFunction
             EndpointApi api = new EndpointApi(input);
             var endpoints = await api.GetEndpoints();
 
-            if (endpoints.Endpoints.Length <= 0)
-            {
-                return createAnswer("Ich konnte keine Verbundenen Geräte finden.");
-            }
-            else if (endpoints.Endpoints.Length >= 0)
-            {
-                return createAnswer("Es wurden Geräte gefunden, mit denen ich Verbunden bin!");
-            }
-
             if (input.Request is LaunchRequest)
             {
-                return createAnswer("Der skill wurder erfolgreich gestartet!");
+                return createAnswer("Der skill wurder erfolgreich gestartet! Du kannst nun die Geschwindigkeit setzten oder den Status abfragen. Was möchtest du tun?");
             }
             else if (input.Request is IntentRequest)
             {
                 IntentRequest intent = input.Request as IntentRequest;
                 if (intent.Intent.Name.Equals("SetSpeedIntent"))
                 {
-                    return createAnswer("Geschwindigkeit wurde gesetzt!");
+                    return createAnswer("Geschwindigkeit wurde gesetzt! " + intent.Intent.Slots["Speed"].Value.ToString());
                 }
-                return createAnswer("Es wurde ein nicht programmierter Intent aufgerufen! " + intent.Intent.Name);
+                else if (intent.Intent.Name.Equals("GetConnectedDevices"))
+                {
+                    if (endpoints.Endpoints.Length <= 0)
+                    {
+                        return createAnswer("Ich konnte keine Verbundenen Geräte finden.", true);
+                    }
+                    else if (endpoints.Endpoints.Length >= 0)
+                    {
+                        var endpoint = endpoints.Endpoints[0];
+                        return createAnswer("Es wurden Geräte gefunden, mit denen ich Verbunden bin! Ein Gerät darunter heißt: " + endpoint.FriendlyName, false, "Was kann ich noch für dich tun?");
+                    }
+                }
+                return createAnswer("Es wurde ein nicht abgefangener Intent aufgerufen! " + intent.Intent.Name);
+            }
+            else if (input.Request is SessionEndedRequest)
+            {
+                return createAnswer("Bye!", true);
             }
             else
             {

@@ -13,6 +13,7 @@ using Alexa.NET.Request;
 using Alexa.NET.Request.Type;
 using Alexa.NET;
 using Alexa.NET.Gadgets.CustomInterfaces;
+using mindstormsFunction.obj;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -23,9 +24,24 @@ namespace mindstormsFunction
     {
         public async Task<SkillResponse> FunctionHandler(SkillRequest input, ILambdaContext context)
         {
-            //Anfrage bearbeiten
+            //Verbindung zur Gadget aufbauen
             EndpointApi api = new EndpointApi(input);
-            var endpoints = await api.GetEndpoints();
+            EndpointResponse endpoints = await api.GetEndpoints();
+
+            //Sicher gehen, dass eine Verbindung steht
+            if (endpoints.Endpoints.Length <= 0)
+            {
+                return createAnswer("Ich konnte keine Verbundenen Geräte finden.", true);
+            }
+
+            IntentRequest intent = input.Request as IntentRequest;
+            SlotData data = new SlotData();
+            data.Direction = intent.Intent.Slots["Direction"].Value;
+            data.Speed = int.Parse(intent.Intent.Slots["Speed"].Value);
+            data.Duration = int.Parse(intent.Intent.Slots["Duration"].Value);
+
+            //Verbundenes Gerät aus Liste holen
+            var endpoint = endpoints.Endpoints[0];
 
             if (input.Request is LaunchRequest)
             {
@@ -33,10 +49,23 @@ namespace mindstormsFunction
             }
             else if (input.Request is IntentRequest)
             {
-                IntentRequest intent = input.Request as IntentRequest;
                 if (intent.Intent.Name.Equals("SetSpeedIntent"))
                 {
-                    return createAnswer("Geschwindigkeit wurde gesetzt! " + intent.Intent.Slots["Speed"].Value.ToString());
+                    SendDirective.AddToDirectiveConverter(); //Only if you're deserializing directives from JSON
+                    var directive = new SendDirective();
+                    directive = new SendDirective(endpoint.EndpointId, "MindstormsGadget", "_activate", JsonConvert.SerializeObject(data));
+                    SkillResponse response = createAnswer($"Anfrage wurde gesendet und Geschwindigkeit wurde auf {data.Speed.ToString()} gesetzt! ", false);
+                    response.Response.Directives.Add(directive);
+                    return response;
+
+                }
+                else if (intent.Intent.Name.Equals("MoveIntent"))
+                {
+                    var directive = new SendDirective();
+                    directive = new SendDirective(endpoint.EndpointId, "", "_move", JsonConvert.SerializeObject(data));
+                    SkillResponse response = createAnswer($"Bewege Roboter {data.Direction} für {data.Duration.ToString()} sekunden! ", false);
+                    response.Response.Directives.Add(directive);
+                    return response;
                 }
                 else if (intent.Intent.Name.Equals("GetConnectedDevices"))
                 {
@@ -46,8 +75,7 @@ namespace mindstormsFunction
                     }
                     else if (endpoints.Endpoints.Length >= 0)
                     {
-                        var endpoint = endpoints.Endpoints[0];
-                        return createAnswer("Es wurden Geräte gefunden, mit denen ich Verbunden bin! Ein Gerät darunter heißt: " + endpoint.FriendlyName, false, "Was kann ich noch für dich tun?");
+                        return createAnswer("Es wurden Geräte gefunden, mit denen ich Verbunden bin! Ein Gerät darunter heißt: " + endpoint.FriendlyName, false, null, "Was kann ich noch für dich tun?");
                     }
                 }
                 return createAnswer("Es wurde ein nicht abgefangener Intent aufgerufen! " + intent.Intent.Name);
@@ -63,7 +91,7 @@ namespace mindstormsFunction
 
         }
 
-        private SkillResponse createAnswer(String answer = "Hey, das ist ein Test", bool endSession = false, String repromptText = "Ich höre zu!", String bodyTitle = "Debugging", String content = "Debugging and Testing Alexa")
+        private SkillResponse createAnswer(String answer = "Hey, das ist ein Test", bool endSession = false, SendDirective directive = null, String repromptText = "Ich höre zu!", String bodyTitle = "Debugging", String content = "Debugging and Testing Alexa")
         {
             // create the speech response
             var speech = new SsmlOutputSpeech();
@@ -78,6 +106,7 @@ namespace mindstormsFunction
 
             var skillResponse = new SkillResponse();
             skillResponse.Response = responseBody;
+            // skillResponse.Response.Directives.Add(directive);
             skillResponse.Version = "1.0";
 
             return skillResponse;

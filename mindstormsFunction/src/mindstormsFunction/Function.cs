@@ -19,20 +19,58 @@ namespace mindstormsFunction
 {
     public class Function
     {
-        public async Task<SkillResponse> FunctionHandler(SkillRequest input, ILambdaContext context)
+        public SkillResponse FunctionHandler(SkillRequest input, ILambdaContext context)
         {
-            //Get Endpoint
-            var api = new EndpointApi(input);
-            var endpoints = await api.GetEndpoints();
-
-            //Sicher gehen, dass eine Verbindung steht
-            if (endpoints.Endpoints.Length <= 0)
+            if (input.Request.GetType() == typeof(SystemExceptionRequest))
             {
-                return createAnswer("Ich konnte keine Verbundenen Geräte finden.", true);
+                SystemExceptionRequest error = input.Request as SystemExceptionRequest;
+                string message = error.Error.Message;
+                switch (error.Error.Type)
+                {
+                    case ErrorType.InvalidResponse:
+                        return createAnswer("Fehler.", false, "hmmm", message);
+                    case ErrorType.DeviceCommunicationError:
+                        return createAnswer("Fehler.", false, "hmmm", message);
+                    case ErrorType.InternalError:
+                        return createAnswer("Fehler.", false, "hmmm", message);
+                    case ErrorType.MediaErrorUnknown:
+                        return createAnswer("Fehler.", false, "hmmm", message);
+                    case ErrorType.InvalidMediaRequest:
+                        return createAnswer("Fehler.", false, "hmmm", message);
+                    case ErrorType.MediaServiceUnavailable:
+                        return createAnswer("Fehler.", false, "hmmm", message);
+                    case ErrorType.InternalServerError:
+                        return createAnswer("Fehler.", false, "hmmm", message);
+                    case ErrorType.InternalDeviceError:
+                        return createAnswer("Fehler.", false, "hmmm", message);
+                    default:
+                        return createAnswer("Fehler.", false, "hmmm", message);
+                }
             }
 
+            //Get Endpoint
+            var api = new EndpointApi(input);
+            EndpointResponse endpoints = api.GetEndpoints().Result;
+            //Sicher gehen, dass eine Verbindung steht
+            // if (endpoints.Endpoints.Length <= 0)
+            // {
+            //     return createAnswer("Ich konnte keine Verbundenen Geräte finden.", true);
+            // }
+
             //Verbundenes Gerät aus Liste holen
-            var endpoint = endpoints.Endpoints[0];
+            Endpoint endpoint = new Endpoint();
+            try
+            {
+                endpoint = endpoints.Endpoints[0];
+            }
+            catch (Exception)
+            {
+                endpoint = new Endpoint()
+                {
+                    EndpointId = "NullIdHere",
+                    FriendlyName = "Null Endpoint"
+                };
+            }
 
             //Intent holen
             IntentRequest intent = input.Request as IntentRequest;
@@ -58,11 +96,8 @@ namespace mindstormsFunction
                         speedData.Speed = Convert.ToInt32(intent.Intent.Slots["Speed"].Value);
                     }
 
-                    //Befehl erstellen
-                    var directive = new SendDirective(endpoint.EndpointId, endpoint.Capabilities[0].Type, "control", JsonConvert.SerializeObject(speedData));
-
                     // create the speech response
-                    var speech = new SsmlOutputSpeech();
+                    SsmlOutputSpeech speech = new SsmlOutputSpeech();
                     speech.Ssml = $"<speak>Die Geschwindigkeit wurde erfolgreich angepasst auf {speedData.Speed}!</speak>";
 
                     //ResponseBody vorbereiten
@@ -71,14 +106,16 @@ namespace mindstormsFunction
                     responseBody.ShouldEndSession = false; // this triggers the reprompt
                     responseBody.Reprompt = new Reprompt("Gibt es noch etwas, das ich tun soll?");
                     responseBody.Card = new SimpleCard { Title = "Debugging", Content = "Speed directive" };
-                    responseBody.Directives.Append(directive);
                     responseBody.ShouldSerializeDirectives();
 
                     //Antwort vorbereiten
-                    SendDirective.AddToDirectiveConverter(); //Valide
-                    var skillResponse = new SkillResponse();
+                    SkillResponse skillResponse = new SkillResponse();
                     skillResponse.Version = "1.0";
                     skillResponse.Response = responseBody;
+                    SendDirective.AddToDirectiveConverter();
+                    SendDirective directive = new SendDirective(endpoint.EndpointId, "Custom.Mindstorms.Gadget", "Control", speedData);
+                    skillResponse.Response.Directives.Add(directive);
+
                     return skillResponse;
                 }
                 else if (intent.Intent.Name.Equals("MoveIntent"))
@@ -87,7 +124,8 @@ namespace mindstormsFunction
                     dirData.Direction = "forward";
                     dirData.Duration = 1;
                     //Befehl erstellen
-                    var directive = new SendDirective(endpoint.EndpointId, endpoint.Capabilities[0].Type, "control", JsonConvert.SerializeObject(dirData));
+                    SendDirective directive = new SendDirective(endpoint.EndpointId, "Custom.Mindstorms.Gadget", "Control", JsonConvert.SerializeObject(dirData));
+                    // SendDirective directive = new SendDirective("endpointIDHere", "Custom.Mindstorms.Gadget", "Control", JsonConvert.SerializeObject(dirData));
 
                     // create the speech response
                     var speech = new SsmlOutputSpeech();
@@ -99,18 +137,39 @@ namespace mindstormsFunction
                     responseBody.ShouldEndSession = false; // this triggers the reprompt
                     responseBody.Reprompt = new Reprompt("Gibt es noch etwas, das ich tun soll?");
                     responseBody.Card = new SimpleCard { Title = "Debugging", Content = "Move Robot" };
-                    responseBody.Directives.Append(directive);
-                    responseBody.ShouldSerializeDirectives();
+                    responseBody.Directives.Add(directive);
 
                     //Antwort vorbereiten
-                    SendDirective.AddToDirectiveConverter(); //Valide
                     var skillResponse = new SkillResponse();
                     skillResponse.Version = "1.0";
                     skillResponse.Response = responseBody;
                     return skillResponse;
 
                 }
-                return createAnswer("Es wurde ein nicht abgefangener Intent aufgerufen! " + intent.Intent.Name);
+                else if (intent.Intent.Name.Equals("AMAZON.FallbackIntent"))
+                {
+                    return createAnswer("Fallbackintent wurde aufgerufen!", true);
+                }
+                else if (intent.Intent.Name.Equals("AMAZON.CancelIntent"))
+                {
+                    return createAnswer("Cancel Intent wurde aufgerufen!", true);
+                }
+                else if (intent.Intent.Name.Equals("AMAZON.HelpIntent"))
+                {
+                    return createAnswer("Help wurde aufgerufen!", true);
+                }
+                else if (intent.Intent.Name.Equals("AMAZON.StopIntent"))
+                {
+                    return createAnswer("Stop wurde aufgerufen!", true);
+                }
+                else if (intent.Intent.Name.Equals("AMAZON.NavigateHomeIntent"))
+                {
+                    return createAnswer("Navigate Home wurde aufgerufen!", true);
+                }
+                else
+                {
+                    return createAnswer("Es wurde ein nicht abgefangener Intent aufgerufen! " + intent.Intent.Name);
+                }
             }
             else
             {

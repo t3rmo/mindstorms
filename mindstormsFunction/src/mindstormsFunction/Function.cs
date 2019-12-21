@@ -21,22 +21,23 @@ namespace mindstormsFunction
     {
         public async Task<SkillResponse> FunctionHandler(SkillRequest input, ILambdaContext context)
         {
+            //Get Endpoint
             var api = new EndpointApi(input);
             var endpoints = await api.GetEndpoints();
 
-            // //Sicher gehen, dass eine Verbindung steht
-            // if (endpoints.Endpoints.Length <= 0)
-            // {
-            //     return createAnswer("Ich konnte keine Verbundenen Geräte finden.", true);
-            // }
-
-            IntentRequest intent = input.Request as IntentRequest;
-            SlotData data = new SlotData();
+            //Sicher gehen, dass eine Verbindung steht
+            if (endpoints.Endpoints.Length <= 0)
+            {
+                return createAnswer("Ich konnte keine Verbundenen Geräte finden.", true);
+            }
 
             //Verbundenes Gerät aus Liste holen
             var endpoint = endpoints.Endpoints[0];
 
+            //Intent holen
+            IntentRequest intent = input.Request as IntentRequest;
 
+            //Intent abfragen und Handeln
             if (input.Request is LaunchRequest)
             {
                 return createAnswer("Was möchtest du tun?");
@@ -45,51 +46,67 @@ namespace mindstormsFunction
             {
                 if (intent.Intent.Name.Equals("SetSpeedIntent"))
                 {
+                    SpeedData speedData = new SpeedData();
+                    speedData.Command = "speed";
 
-                    data.Speed = 5;
-                    SendDirective.AddToDirectiveConverter(); //Valide
-                    var directive = new SendDirective(endpoint.EndpointId, endpoint.Capabilities[0].Type, endpoint.Capabilities[0].Interface, JsonConvert.SerializeObject(data));
+                    if (intent.Intent.Slots["Speed"].Value.Equals("?"))
+                    {
+                        speedData.Speed = 100;
+                    }
+                    else
+                    {
+                        speedData.Speed = Convert.ToInt32(intent.Intent.Slots["Speed"].Value);
+                    }
+
+                    //Befehl erstellen
+                    var directive = new SendDirective(endpoint.EndpointId, endpoint.Capabilities[0].Type, "control", JsonConvert.SerializeObject(speedData));
+
                     // create the speech response
                     var speech = new SsmlOutputSpeech();
-                    speech.Ssml = $"<speak>Die Geschwindkeit wurde erfolgreich angepasst auf {data.Speed}!</speak>";
+                    speech.Ssml = $"<speak>Die Geschwindigkeit wurde erfolgreich angepasst auf {speedData.Speed}!</speak>";
 
-                    // create the response
-                    var responseBody = new ResponseBody();
+                    //ResponseBody vorbereiten
+                    ResponseBody responseBody = new ResponseBody();
                     responseBody.OutputSpeech = speech;
                     responseBody.ShouldEndSession = false; // this triggers the reprompt
                     responseBody.Reprompt = new Reprompt("Gibt es noch etwas, das ich tun soll?");
-                    responseBody.Card = new SimpleCard { Title = "bodyTitle", Content = "No directive" };
+                    responseBody.Card = new SimpleCard { Title = "Debugging", Content = "Speed directive" };
                     responseBody.Directives.Append(directive);
+                    responseBody.ShouldSerializeDirectives();
 
+                    //Antwort vorbereiten
+                    SendDirective.AddToDirectiveConverter(); //Valide
                     var skillResponse = new SkillResponse();
-                    skillResponse.Response = responseBody;
                     skillResponse.Version = "1.0";
+                    skillResponse.Response = responseBody;
                     return skillResponse;
                 }
                 else if (intent.Intent.Name.Equals("MoveIntent"))
                 {
-                    // data.Direction = intent.Intent.Slots["Direction"].Value;
-                    // data.Duration = intent.Intent.Slots["Duration"].Value;
-                    data.Direction = "forward";
-                    data.Duration = 1;
-                    SendDirective.AddToDirectiveConverter(); //Valide
-                    var directive = new SendDirective(endpoint.EndpointId, endpoint.Capabilities[0].Type, endpoint.Capabilities[0].Interface, JsonConvert.SerializeObject(data));
+                    DirectionData dirData = new DirectionData();
+                    dirData.Direction = "forward";
+                    dirData.Duration = 1;
+                    //Befehl erstellen
+                    var directive = new SendDirective(endpoint.EndpointId, endpoint.Capabilities[0].Type, "control", JsonConvert.SerializeObject(dirData));
+
                     // create the speech response
                     var speech = new SsmlOutputSpeech();
-                    speech.Ssml = $"<speak>Roboter wird bewegt!</speak>";
+                    speech.Ssml = $"<speak>Der Roboter wird bewegt!</speak>";
 
-                    // create the response
-                    var responseBody = new ResponseBody();
+                    //ResponseBody vorbereiten
+                    ResponseBody responseBody = new ResponseBody();
                     responseBody.OutputSpeech = speech;
                     responseBody.ShouldEndSession = false; // this triggers the reprompt
-                    responseBody.Reprompt = new Reprompt("Was kann ich noch für dich tun?");
-                    responseBody.Card = new SimpleCard { Title = "Debugging", Content = "Moving Robot" };
+                    responseBody.Reprompt = new Reprompt("Gibt es noch etwas, das ich tun soll?");
+                    responseBody.Card = new SimpleCard { Title = "Debugging", Content = "Move Robot" };
                     responseBody.Directives.Append(directive);
                     responseBody.ShouldSerializeDirectives();
 
+                    //Antwort vorbereiten
+                    SendDirective.AddToDirectiveConverter(); //Valide
                     var skillResponse = new SkillResponse();
-                    skillResponse.Response = responseBody;
                     skillResponse.Version = "1.0";
+                    skillResponse.Response = responseBody;
                     return skillResponse;
 
                 }

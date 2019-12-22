@@ -104,7 +104,7 @@ namespace mindstormsFunction
                     ResponseBody responseBody = new ResponseBody();
                     responseBody.OutputSpeech = speech;
                     responseBody.ShouldEndSession = null;
-                    // responseBody.Card = new SimpleCard { Title = "Debugging", Content = "Speed directive" };
+                    responseBody.Card = new SimpleCard { Title = "Debugging", Content = "Speed directive" };
 
                     //Antwort vorbereiten
                     SkillResponse skillResponse = new SkillResponse();

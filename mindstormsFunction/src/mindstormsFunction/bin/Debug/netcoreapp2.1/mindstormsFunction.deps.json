@@ -8,7 +8,7 @@
     ".NETCoreApp,Version=v2.1": {
       "mindstormsFunction/1.0.0": {
         "dependencies": {
-          "Alexa.NET.Gadgets": "1.5.0",
+          "Alexa.NET.Gadgets": "1.5.1",
           "Alexa.NET.Management": "4.0.0",
           "Amazon.Lambda.Core": "1.1.0",
           "Amazon.Lambda.Serialization.Json": "1.7.0"
@@ -28,14 +28,14 @@
           }
         }
       },
-      "Alexa.NET.Gadgets/1.5.0": {
+      "Alexa.NET.Gadgets/1.5.1": {
         "dependencies": {
           "Alexa.NET": "1.8.2"
         },
         "runtime": {
           "lib/netstandard2.0/Alexa.NET.Gadgets.dll": {
-            "assemblyVersion": "1.5.0.0",
-            "fileVersion": "1.5.0.0"
+            "assemblyVersion": "1.5.1.0",
+            "fileVersion": "1.5.1.0"
           }
         }
       },
@@ -105,12 +105,12 @@
       "path": "alexa.net/1.8.2",
       "hashPath": "alexa.net.1.8.2.nupkg.sha512"
     },
-    "Alexa.NET.Gadgets/1.5.0": {
+    "Alexa.NET.Gadgets/1.5.1": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-mBFLznJatHUqlRtNIpmRM045aaRFwIRN9Okl96NZd0yMSXRXOJ+KWUSNxBc0ZSkZWhvcS4OtfbGjFwslK+jTaQ==",
-      "path": "alexa.net.gadgets/1.5.0",
-      "hashPath": "alexa.net.gadgets.1.5.0.nupkg.sha512"
+      "sha512": "sha512-26ogGJLeJzLMI3X1Qre1gcvGQU43yvdHW+jT4Ucp0lW7cRZzqofaTwR2CSXJgGenxhKgsZ+YV2/cEj1EsHglog==",
+      "path": "alexa.net.gadgets/1.5.1",
+      "hashPath": "alexa.net.gadgets.1.5.1.nupkg.sha512"
     },
     "Alexa.NET.Management/4.0.0": {
       "type": "package",

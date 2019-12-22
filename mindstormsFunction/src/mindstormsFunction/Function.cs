@@ -21,9 +21,9 @@ namespace mindstormsFunction
     {
         public SkillResponse FunctionHandler(SkillRequest input, ILambdaContext context)
         {
-            if (input.Request.GetType() == typeof(SystemExceptionRequest))
+            if (input.Request.GetType() == typeof(SessionEndedRequest))
             {
-                SystemExceptionRequest error = input.Request as SystemExceptionRequest;
+                SessionEndedRequest error = input.Request as SessionEndedRequest;
                 string message = error.Error.Message;
                 switch (error.Error.Type)
                 {
@@ -52,10 +52,10 @@ namespace mindstormsFunction
             var api = new EndpointApi(input);
             EndpointResponse endpoints = api.GetEndpoints().Result;
             //Sicher gehen, dass eine Verbindung steht
-            // if (endpoints.Endpoints.Length <= 0)
-            // {
-            //     return createAnswer("Ich konnte keine Verbundenen Geräte finden.", true);
-            // }
+            if (endpoints.Endpoints.Length <= 0)
+            {
+                return createAnswer("Ich konnte keine Verbundenen Geräte finden.", true);
+            }
 
             //Verbundenes Gerät aus Liste holen
             Endpoint endpoint = new Endpoint();
@@ -103,17 +103,14 @@ namespace mindstormsFunction
                     //ResponseBody vorbereiten
                     ResponseBody responseBody = new ResponseBody();
                     responseBody.OutputSpeech = speech;
-                    responseBody.ShouldEndSession = false; // this triggers the reprompt
-                    responseBody.Reprompt = new Reprompt("Gibt es noch etwas, das ich tun soll?");
-                    responseBody.Card = new SimpleCard { Title = "Debugging", Content = "Speed directive" };
-                    responseBody.ShouldSerializeDirectives();
+                    responseBody.ShouldEndSession = null;
+                    // responseBody.Card = new SimpleCard { Title = "Debugging", Content = "Speed directive" };
 
                     //Antwort vorbereiten
                     SkillResponse skillResponse = new SkillResponse();
                     skillResponse.Version = "1.0";
+                    SendDirective directive = new SendDirective(endpoint.EndpointId, "Custom.Mindstorms.Gadget", "control", speedData);
                     skillResponse.Response = responseBody;
-                    SendDirective.AddToDirectiveConverter();
-                    SendDirective directive = new SendDirective(endpoint.EndpointId, "Custom.Mindstorms.Gadget", "Control", speedData);
                     skillResponse.Response.Directives.Add(directive);
 
                     return skillResponse;
@@ -121,11 +118,12 @@ namespace mindstormsFunction
                 else if (intent.Intent.Name.Equals("MoveIntent"))
                 {
                     DirectionData dirData = new DirectionData();
+                    dirData.Speed = 100;
+                    dirData.CommandType = "move";
                     dirData.Direction = "forward";
                     dirData.Duration = 1;
                     //Befehl erstellen
-                    SendDirective directive = new SendDirective(endpoint.EndpointId, "Custom.Mindstorms.Gadget", "Control", JsonConvert.SerializeObject(dirData));
-                    // SendDirective directive = new SendDirective("endpointIDHere", "Custom.Mindstorms.Gadget", "Control", JsonConvert.SerializeObject(dirData));
+                    SendDirective directive = new SendDirective(endpoint.EndpointId, "Custom.Mindstorms.Gadget", "control", dirData);
 
                     // create the speech response
                     var speech = new SsmlOutputSpeech();
@@ -134,8 +132,7 @@ namespace mindstormsFunction
                     //ResponseBody vorbereiten
                     ResponseBody responseBody = new ResponseBody();
                     responseBody.OutputSpeech = speech;
-                    responseBody.ShouldEndSession = false; // this triggers the reprompt
-                    responseBody.Reprompt = new Reprompt("Gibt es noch etwas, das ich tun soll?");
+                    responseBody.ShouldEndSession = null;
                     responseBody.Card = new SimpleCard { Title = "Debugging", Content = "Move Robot" };
                     responseBody.Directives.Add(directive);
 
@@ -178,6 +175,7 @@ namespace mindstormsFunction
 
         }
 
+
         private SkillResponse createAnswer(String answer = "Hey, das ist ein Test", bool endSession = false, String repromptText = "Ich höre zu!", String bodyTitle = "Debugging", String content = "Debugging and Testing Alexa")
         {
 
@@ -188,7 +186,6 @@ namespace mindstormsFunction
             // create the response
             var responseBody = new ResponseBody();
             responseBody.OutputSpeech = speech;
-            responseBody.ShouldEndSession = endSession; // this triggers the reprompt
             responseBody.Reprompt = new Reprompt(repromptText);
             responseBody.Card = new SimpleCard { Title = bodyTitle, Content = "No directive" };
 

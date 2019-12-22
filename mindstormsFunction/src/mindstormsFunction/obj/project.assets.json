@@ -14,7 +14,7 @@
           "lib/netstandard2.0/Alexa.NET.dll": {}
         }
       },
-      "Alexa.NET.Gadgets/1.5.0": {
+      "Alexa.NET.Gadgets/1.5.1": {
         "type": "package",
         "dependencies": {
           "Alexa.NET": "1.8.0"
@@ -306,15 +306,15 @@
         "lib/netstandard2.0/Alexa.NET.dll"
       ]
     },
-    "Alexa.NET.Gadgets/1.5.0": {
-      "sha512": "mBFLznJatHUqlRtNIpmRM045aaRFwIRN9Okl96NZd0yMSXRXOJ+KWUSNxBc0ZSkZWhvcS4OtfbGjFwslK+jTaQ==",
+    "Alexa.NET.Gadgets/1.5.1": {
+      "sha512": "26ogGJLeJzLMI3X1Qre1gcvGQU43yvdHW+jT4Ucp0lW7cRZzqofaTwR2CSXJgGenxhKgsZ+YV2/cEj1EsHglog==",
       "type": "package",
-      "path": "alexa.net.gadgets/1.5.0",
+      "path": "alexa.net.gadgets/1.5.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
         "LICENSE",
-        "alexa.net.gadgets.1.5.0.nupkg.sha512",
+        "alexa.net.gadgets.1.5.1.nupkg.sha512",
         "alexa.net.gadgets.nuspec",
         "lib/netstandard2.0/Alexa.NET.Gadgets.dll"
       ]
@@ -1066,7 +1066,7 @@
   },
   "projectFileDependencyGroups": {
     ".NETCoreApp,Version=v2.1": [
-      "Alexa.NET.Gadgets >= 1.5.0",
+      "Alexa.NET.Gadgets >= 1.5.1",
       "Alexa.NET.Management >= 4.0.0",
       "Amazon.Lambda.Core >= 1.1.0",
       "Amazon.Lambda.Serialization.Json >= 1.7.0",
@@ -1119,7 +1119,7 @@
         "dependencies": {
           "Alexa.NET.Gadgets": {
             "target": "Package",
-            "version": "[1.5.0, )"
+            "version": "[1.5.1, )"
           },
           "Alexa.NET.Management": {
             "target": "Package",

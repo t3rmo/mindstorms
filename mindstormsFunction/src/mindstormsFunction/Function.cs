@@ -103,7 +103,8 @@ namespace mindstormsFunction
                     //ResponseBody vorbereiten
                     ResponseBody responseBody = new ResponseBody();
                     responseBody.OutputSpeech = speech;
-                    responseBody.ShouldEndSession = null;
+                    responseBody.ShouldEndSession = false;
+                    responseBody.Reprompt = new Reprompt("Was möchtest du tun?");
                     responseBody.Card = new SimpleCard { Title = "Debugging", Content = "Speed directive" };
 
                     //Antwort vorbereiten
@@ -132,7 +133,8 @@ namespace mindstormsFunction
                     //ResponseBody vorbereiten
                     ResponseBody responseBody = new ResponseBody();
                     responseBody.OutputSpeech = speech;
-                    responseBody.ShouldEndSession = null;
+                    responseBody.ShouldEndSession = false;
+                    responseBody.Reprompt = new Reprompt("Was möchtest du tun?");
                     responseBody.Card = new SimpleCard { Title = "Debugging", Content = "Move Robot" };
                     responseBody.Directives.Add(directive);
 

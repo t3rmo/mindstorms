@@ -89,23 +89,40 @@ namespace mindstormsFunction
 
                     if (intent.Intent.Slots["Speed"].Value.Equals("?"))
                     {
-                        speedData.Speed = 100;
+                        return createAnswer("Ich habe die von dir angegebene Geschwindkeit nicht verstanden. Bitte wiederhole den Satz.");
                     }
                     else
                     {
-                        speedData.Speed = Convert.ToInt32(intent.Intent.Slots["Speed"].Value);
+                        int _speedVal = Convert.ToInt32(intent.Intent.Slots["Speed"].Value);
+                        if (_speedVal >= 0 || _speedVal <= 100)
+                        {
+                            speedData.Speed = Convert.ToInt32(intent.Intent.Slots["Speed"].Value);
+                            if (input.Session.Attributes.ContainsKey("Speed"))
+                            {
+                                input.Session.Attributes["Speed"] = _speedVal;
+                            }
+                            else
+                            {
+                                input.Session.Attributes.Add("Speed", _speedVal);
+                            }
+                        }
+                        else
+                        {
+                            return createAnswer("Die Geschwindkeit darf nur in einem Bereich zwischen 1 und 100 liegen. Bitte wiederhole deine Aussage, mit einem korrekten Wert.");
+                        }
+
                     }
 
                     // create the speech response
                     SsmlOutputSpeech speech = new SsmlOutputSpeech();
-                    speech.Ssml = $"<speak>Die Geschwindigkeit wurde erfolgreich angepasst auf {speedData.Speed}!</speak>";
+                    speech.Ssml = $"<speak>Die Geschwindigkeit wurde auf {speedData.Speed} angepasst!</speak>";
 
                     //ResponseBody vorbereiten
                     ResponseBody responseBody = new ResponseBody();
                     responseBody.OutputSpeech = speech;
                     responseBody.ShouldEndSession = false;
                     responseBody.Reprompt = new Reprompt("Was möchtest du tun?");
-                    responseBody.Card = new SimpleCard { Title = "Debugging", Content = "Speed directive" };
+                    responseBody.Card = new SimpleCard { Title = "Geschwindigkeit erhöht", Content = $"Die Geschwindigkeit wurde erfolgreich auf {speedData.Speed} angepasst!" };
 
                     //Antwort vorbereiten
                     SkillResponse skillResponse = new SkillResponse();

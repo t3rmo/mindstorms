@@ -85,6 +85,8 @@ namespace mindstormsFunction
                 if (intent.Intent.Name.Equals("SetSpeedIntent"))
                 {
                     SpeedData speedData = new SpeedData();
+                    Session _session = input.Session;
+
                     speedData.Command = "speed";
 
                     if (intent.Intent.Slots["Speed"].Value.Equals("?"))
@@ -94,24 +96,31 @@ namespace mindstormsFunction
                     else
                     {
                         int _speedVal = Convert.ToInt32(intent.Intent.Slots["Speed"].Value);
+
                         if (_speedVal >= 0 || _speedVal <= 100)
                         {
                             speedData.Speed = Convert.ToInt32(intent.Intent.Slots["Speed"].Value);
-                            if (input.Session.Attributes.ContainsKey("Speed"))
-                            {
-                                input.Session.Attributes["Speed"] = _speedVal;
-                            }
+
+                            //Check if Attributes exists
+                            if (_session.Attributes == null)
+                                _session.Attributes = new Dictionary<string, object>();
+
+                            //Set or Add Session Attribute
+                            if (_session.Attributes.ContainsKey("Speed"))
+                                _session.Attributes["Speed"] = _speedVal;
                             else
-                            {
-                                input.Session.Attributes.Add("Speed", _speedVal);
-                            }
+                                _session.Attributes.Add("Speed", _speedVal);
+
                         }
                         else
                         {
-                            return createAnswer("Die Geschwindkeit darf nur in einem Bereich zwischen 1 und 100 liegen. Bitte wiederhole deine Aussage, mit einem korrekten Wert.");
+                            return createAnswer("Die Geschwindigkeit darf nur in einem Bereich zwischen 1 und 100 liegen. Bitte wiederhole deine Aussage, mit einem korrekten Wert.");
                         }
 
                     }
+
+                    //Create directive for the Robot
+                    SendDirective directive = new SendDirective(endpoint.EndpointId, "Custom.Mindstorms.Gadget", "control", speedData);
 
                     // create the speech response
                     SsmlOutputSpeech speech = new SsmlOutputSpeech();
@@ -127,8 +136,8 @@ namespace mindstormsFunction
                     //Antwort vorbereiten
                     SkillResponse skillResponse = new SkillResponse();
                     skillResponse.Version = "1.0";
-                    SendDirective directive = new SendDirective(endpoint.EndpointId, "Custom.Mindstorms.Gadget", "control", speedData);
                     skillResponse.Response = responseBody;
+                    skillResponse.SessionAttributes = _session.Attributes;
                     skillResponse.Response.Directives.Add(directive);
 
                     return skillResponse;
@@ -136,10 +145,56 @@ namespace mindstormsFunction
                 else if (intent.Intent.Name.Equals("MoveIntent"))
                 {
                     DirectionData dirData = new DirectionData();
-                    dirData.Speed = 100;
-                    dirData.CommandType = "move";
-                    dirData.Direction = "forward";
-                    dirData.Duration = 1;
+                    Session _session = input.Session;
+
+                    //Create Attributes if not existend
+                    if (_session.Attributes == null)
+                        _session.Attributes = new Dictionary<string, object>();
+
+                    //Attributes Checkup
+                    if (_session.Attributes.ContainsKey("Speed"))
+                    {
+                        dirData.Speed = Convert.ToInt32(_session.Attributes["Speed"]);
+                    }
+                    else
+                    {
+                        dirData.Speed = 100;
+                        _session.Attributes.Add("Speed", 100);
+                    }
+
+                    dirData.CommandType = "move"; //Placeholder
+
+                    //Get Direction Slot Value
+                    if (intent.Intent.Slots["Direction"].Value.Equals(""))
+                    {
+                        createAnswer("Ich habe nicht verstanden, in welche Richtung sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.");
+                    }
+                    else
+                    {
+                        if (intent.Intent.Slots["Direction"].Value == "gerade aus" || intent.Intent.Slots["Direction"].Value == "vorwärts")
+                        {
+                            dirData.Direction = "forward";
+                        }
+                        else if (intent.Intent.Slots["Direction"].Value == "geradeaus")
+                        {
+                            dirData.Direction = "forward";
+                        }
+                        else
+                        {
+                            dirData.Direction = intent.Intent.Slots["Direction"].Value;
+                        }
+                    }
+
+                    //Get Duration Slot Value
+                    if (intent.Intent.Slots["Duration"].Value.Equals("?"))
+                    {
+                        createAnswer("Ich habe nicht verstanden, wie lange sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.");
+                    }
+                    else
+                    {
+                        dirData.Duration = Convert.ToInt32(intent.Intent.Slots["Duration"].Value);
+                    }
+
                     //Befehl erstellen
                     SendDirective directive = new SendDirective(endpoint.EndpointId, "Custom.Mindstorms.Gadget", "control", dirData);
 
@@ -164,23 +219,23 @@ namespace mindstormsFunction
                 }
                 else if (intent.Intent.Name.Equals("AMAZON.FallbackIntent"))
                 {
-                    return createAnswer("Fallbackintent wurde aufgerufen!", true);
+                    return createEndAnswer("Fallbackintent wurde aufgerufen!");
                 }
                 else if (intent.Intent.Name.Equals("AMAZON.CancelIntent"))
                 {
-                    return createAnswer("Cancel Intent wurde aufgerufen!", true);
+                    return createEndAnswer("Cancel Intent wurde aufgerufen!");
                 }
                 else if (intent.Intent.Name.Equals("AMAZON.HelpIntent"))
                 {
-                    return createAnswer("Help wurde aufgerufen!", true);
+                    return createEndAnswer("Help wurde aufgerufen!");
                 }
                 else if (intent.Intent.Name.Equals("AMAZON.StopIntent"))
                 {
-                    return createAnswer("Stop wurde aufgerufen!", true);
+                    return createEndAnswer("Stop wurde aufgerufen!");
                 }
                 else if (intent.Intent.Name.Equals("AMAZON.NavigateHomeIntent"))
                 {
-                    return createAnswer("Navigate Home wurde aufgerufen!", true);
+                    return createEndAnswer("Navigate Home wurde aufgerufen!");
                 }
                 else
                 {
@@ -207,6 +262,25 @@ namespace mindstormsFunction
             responseBody.OutputSpeech = speech;
             responseBody.Reprompt = new Reprompt(repromptText);
             responseBody.Card = new SimpleCard { Title = bodyTitle, Content = "No directive" };
+
+            var skillResponse = new SkillResponse();
+            skillResponse.Response = responseBody;
+            skillResponse.Version = "1.0";
+
+            return skillResponse;
+        }
+
+        private SkillResponse createEndAnswer(String answer = "Hey, das ist ein Test")
+        {
+
+            // create the speech response
+            var speech = new SsmlOutputSpeech();
+            speech.Ssml = $"<speak>{answer}</speak>";
+
+            // create the response
+            var responseBody = new ResponseBody();
+            responseBody.ShouldEndSession = true;
+            responseBody.OutputSpeech = speech;
 
             var skillResponse = new SkillResponse();
             skillResponse.Response = responseBody;

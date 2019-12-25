@@ -21,36 +21,22 @@ namespace mindstormsFunction
     {
         public SkillResponse FunctionHandler(SkillRequest input, ILambdaContext context)
         {
+
             if (input.Request.GetType() == typeof(SessionEndedRequest))
             {
-                SessionEndedRequest error = input.Request as SessionEndedRequest;
-                string message = error.Error.Message;
-                switch (error.Error.Type)
-                {
-                    case ErrorType.InvalidResponse:
-                        return createAnswer("Fehler.", false, "hmmm", message);
-                    case ErrorType.DeviceCommunicationError:
-                        return createAnswer("Fehler.", false, "hmmm", message);
-                    case ErrorType.InternalError:
-                        return createAnswer("Fehler.", false, "hmmm", message);
-                    case ErrorType.MediaErrorUnknown:
-                        return createAnswer("Fehler.", false, "hmmm", message);
-                    case ErrorType.InvalidMediaRequest:
-                        return createAnswer("Fehler.", false, "hmmm", message);
-                    case ErrorType.MediaServiceUnavailable:
-                        return createAnswer("Fehler.", false, "hmmm", message);
-                    case ErrorType.InternalServerError:
-                        return createAnswer("Fehler.", false, "hmmm", message);
-                    case ErrorType.InternalDeviceError:
-                        return createAnswer("Fehler.", false, "hmmm", message);
-                    default:
-                        return createAnswer("Fehler.", false, "hmmm", message);
-                }
+                return getError(input);
             }
 
             //Get Endpoint
             var api = new EndpointApi(input);
             EndpointResponse endpoints = api.GetEndpoints().Result;
+
+            //Session for SessionAttributes
+            Session _session = input.Session;
+            //Create Attributes if not existend
+            if (_session.Attributes == null)
+                _session.Attributes = new Dictionary<string, object>();
+
             //Sicher gehen, dass eine Verbindung steht
             if (endpoints.Endpoints.Length <= 0)
             {
@@ -85,7 +71,6 @@ namespace mindstormsFunction
                 if (intent.Intent.Name.Equals("SetSpeedIntent"))
                 {
                     SpeedData speedData = new SpeedData();
-                    Session _session = input.Session;
 
                     speedData.Command = "speed";
 
@@ -122,34 +107,11 @@ namespace mindstormsFunction
                     //Create directive for the Robot
                     SendDirective directive = new SendDirective(endpoint.EndpointId, "Custom.Mindstorms.Gadget", "control", speedData);
 
-                    // create the speech response
-                    SsmlOutputSpeech speech = new SsmlOutputSpeech();
-                    speech.Ssml = $"<speak>Die Geschwindigkeit wurde auf {speedData.Speed} angepasst!</speak>";
-
-                    //ResponseBody vorbereiten
-                    ResponseBody responseBody = new ResponseBody();
-                    responseBody.OutputSpeech = speech;
-                    responseBody.ShouldEndSession = false;
-                    responseBody.Reprompt = new Reprompt("Was möchtest du tun?");
-                    responseBody.Card = new SimpleCard { Title = "Geschwindigkeit erhöht", Content = $"Die Geschwindigkeit wurde erfolgreich auf {speedData.Speed} angepasst!" };
-
-                    //Antwort vorbereiten
-                    SkillResponse skillResponse = new SkillResponse();
-                    skillResponse.Version = "1.0";
-                    skillResponse.Response = responseBody;
-                    skillResponse.SessionAttributes = _session.Attributes;
-                    skillResponse.Response.Directives.Add(directive);
-
-                    return skillResponse;
+                    return createRoboterRequest("Die Geschwindkeit wurde gesetzt", endpoint.EndpointId, "control", speedData, _session);
                 }
                 else if (intent.Intent.Name.Equals("MoveIntent"))
                 {
                     DirectionData dirData = new DirectionData();
-                    Session _session = input.Session;
-
-                    //Create Attributes if not existend
-                    if (_session.Attributes == null)
-                        _session.Attributes = new Dictionary<string, object>();
 
                     //Attributes Checkup
                     if (_session.Attributes.ContainsKey("Speed"))
@@ -167,7 +129,7 @@ namespace mindstormsFunction
                     //Get Direction Slot Value
                     if (intent.Intent.Slots["Direction"].Value.Equals(""))
                     {
-                        createAnswer("Ich habe nicht verstanden, in welche Richtung sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.");
+                        return createAnswer("Ich habe nicht verstanden, in welche Richtung sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.");
                     }
                     else
                     {
@@ -188,7 +150,7 @@ namespace mindstormsFunction
                     //Get Duration Slot Value
                     if (intent.Intent.Slots["Duration"].Value.Equals("?"))
                     {
-                        createAnswer("Ich habe nicht verstanden, wie lange sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.");
+                        return createAnswer("Ich habe nicht verstanden, wie lange sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.");
                     }
                     else
                     {
@@ -196,26 +158,50 @@ namespace mindstormsFunction
                     }
 
                     //Befehl erstellen
-                    SendDirective directive = new SendDirective(endpoint.EndpointId, "Custom.Mindstorms.Gadget", "control", dirData);
+                    return createRoboterRequest("Der Roboter wird bewegt!", endpoint.EndpointId, "control", dirData, _session);
 
-                    // create the speech response
-                    var speech = new SsmlOutputSpeech();
-                    speech.Ssml = $"<speak>Der Roboter wird bewegt!</speak>";
+                }
+                else if (intent.Intent.Name.Equals("DirectionTurnIntent"))
+                {
+                    DirectionData dirData = new DirectionData();
 
-                    //ResponseBody vorbereiten
-                    ResponseBody responseBody = new ResponseBody();
-                    responseBody.OutputSpeech = speech;
-                    responseBody.ShouldEndSession = false;
-                    responseBody.Reprompt = new Reprompt("Was möchtest du tun?");
-                    responseBody.Card = new SimpleCard { Title = "Debugging", Content = "Move Robot" };
-                    responseBody.Directives.Add(directive);
+                    //Attributes Checkup
+                    if (_session.Attributes.ContainsKey("Speed"))
+                    {
+                        dirData.Speed = Convert.ToInt32(_session.Attributes["Speed"]);
+                    }
+                    else
+                    {
+                        dirData.Speed = 100;
+                        _session.Attributes.Add("Speed", 100);
+                    }
 
-                    //Antwort vorbereiten
-                    var skillResponse = new SkillResponse();
-                    skillResponse.Version = "1.0";
-                    skillResponse.Response = responseBody;
-                    return skillResponse;
+                    //Direction
+                    if (intent.Intent.Slots.ContainsKey("Direction"))
+                    {
+                        dirData.Direction = intent.Intent.Slots["Direction"].Value;
+                    }
+                    else
+                    {
+                        return createAnswer("Ich habe nicht verstanden, in welche Richtung sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.");
+                    }
 
+                    //Duration
+                    if (intent.Intent.Slots.ContainsKey("Duration"))
+                    {
+                        dirData.Duration = Convert.ToInt32(intent.Intent.Slots["Duration"].Value);
+                    }
+                    else
+                    {
+                        return createAnswer("Ich habe nicht verstanden, wie lange sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.");
+                    }
+
+                    return createRoboterRequest($"Der Roboter wird nach {dirData.Direction} gedreht.", endpoint.EndpointId, "control", dirData, _session);
+
+                }
+                else if (intent.Intent.Name.Equals("DegreeTurnIntent"))
+                {
+                    return createAnswer("DegreeTurn Intent wurde aufgerufen!");
                 }
                 else if (intent.Intent.Name.Equals("AMAZON.FallbackIntent"))
                 {
@@ -231,7 +217,7 @@ namespace mindstormsFunction
                 }
                 else if (intent.Intent.Name.Equals("AMAZON.StopIntent"))
                 {
-                    return createEndAnswer("Stop wurde aufgerufen!");
+                    return createEndAnswer("Okay, tschüss");
                 }
                 else if (intent.Intent.Name.Equals("AMAZON.NavigateHomeIntent"))
                 {
@@ -249,6 +235,62 @@ namespace mindstormsFunction
 
         }
 
+        private SkillResponse getError(SkillRequest input)
+        {
+
+            SessionEndedRequest error = input.Request as SessionEndedRequest;
+            string message = error.Error.Message;
+            switch (error.Error.Type)
+            {
+                case ErrorType.InvalidResponse:
+                    return createAnswer("Fehler.", false, "hmmm", message);
+                case ErrorType.DeviceCommunicationError:
+                    return createAnswer("Fehler.", false, "hmmm", message);
+                case ErrorType.InternalError:
+                    return createAnswer("Fehler.", false, "hmmm", message);
+                case ErrorType.MediaErrorUnknown:
+                    return createAnswer("Fehler.", false, "hmmm", message);
+                case ErrorType.InvalidMediaRequest:
+                    return createAnswer("Fehler.", false, "hmmm", message);
+                case ErrorType.MediaServiceUnavailable:
+                    return createAnswer("Fehler.", false, "hmmm", message);
+                case ErrorType.InternalServerError:
+                    return createAnswer("Fehler.", false, "hmmm", message);
+                case ErrorType.InternalDeviceError:
+                    return createAnswer("Fehler.", false, "hmmm", message);
+                default:
+                    return createAnswer("Fehler.", false, "hmmm", message);
+            }
+
+        }
+
+
+        private SkillResponse createRoboterRequest(String answer, String endpointID, String nsName, dynamic data, Session _session)
+        {
+
+            //Befehl erstellen
+            SendDirective directive = new SendDirective(endpointID, "Custom.Mindstorms.Gadget", nsName, data);
+
+            // create the speech response
+            var speech = new SsmlOutputSpeech();
+            speech.Ssml = $"<speak>{answer}</speak>";
+
+            //ResponseBody vorbereiten
+            ResponseBody responseBody = new ResponseBody();
+            responseBody.OutputSpeech = speech;
+            responseBody.ShouldEndSession = false;
+            responseBody.Reprompt = new Reprompt("Was möchtest du tun?");
+            responseBody.Card = new SimpleCard { Title = "Debugging", Content = "Move Robot" };
+            responseBody.Directives.Add(directive);
+
+            //Antwort vorbereiten
+            var skillResponse = new SkillResponse();
+            skillResponse.SessionAttributes = _session.Attributes;
+            skillResponse.Version = "1.0";
+            skillResponse.Response = responseBody;
+            return skillResponse;
+
+        }
 
         private SkillResponse createAnswer(String answer = "Hey, das ist ein Test", bool endSession = false, String repromptText = "Ich höre zu!", String bodyTitle = "Debugging", String content = "Debugging and Testing Alexa")
         {

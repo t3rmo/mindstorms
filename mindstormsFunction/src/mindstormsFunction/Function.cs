@@ -19,28 +19,57 @@ namespace mindstormsFunction
 {
     public class Function
     {
+        //List of directives
+        List<SendDirective> directives = new List<SendDirective>();
+
+        //Session for SessionAttributes
+        Session _session = new Session();
+        bool isMultipleCommands = false;
+        CommandPalette cmdPallete = new CommandPalette();
+
         public SkillResponse FunctionHandler(SkillRequest input, ILambdaContext context)
         {
 
+            //Catch any incomming Errors
             if (input.Request.GetType() == typeof(SessionEndedRequest))
             {
                 return getError(input);
             }
 
             //Get Endpoint
-            var api = new EndpointApi(input);
+            EndpointApi api = new EndpointApi(input);
             EndpointResponse endpoints = api.GetEndpoints().Result;
 
             //Session for SessionAttributes
-            Session _session = input.Session;
+            _session = input.Session;
+
             //Create Attributes if not existend
             if (_session.Attributes == null)
                 _session.Attributes = new Dictionary<string, object>();
 
+            //Check if the current Request is a Multiple Request command
+            if (_session.Attributes.ContainsKey("isMultipleCommands"))
+            {
+                isMultipleCommands = Convert.ToBoolean(_session.Attributes["isMultipleCommands"]);
+            }
+            else
+            {
+                _session.Attributes.Add("isMultipleCommands", isMultipleCommands);
+            }
+
+            if (_session.Attributes.ContainsKey("cmdPallete"))
+            {
+                cmdPallete = JsonConvert.DeserializeObject<CommandPalette>(_session.Attributes["cmdPallete"].ToString());
+            }
+            else
+            {
+                _session.Attributes.Add("cmdPallete", cmdPallete);
+            }
+
             //Sicher gehen, dass eine Verbindung steht
             if (endpoints.Endpoints.Length <= 0)
             {
-                return createAnswer("Ich konnte keine Verbundenen Geräte finden.", true);
+                return createAnswer("Ich konnte keine Verbundenen Geräte finden.", true, _session);
             }
 
             //Verbundenes Gerät aus Liste holen
@@ -64,11 +93,27 @@ namespace mindstormsFunction
             //Intent abfragen und Handeln
             if (input.Request is LaunchRequest)
             {
-                return createAnswer("Was möchtest du tun?");
+                return createAnswer("Was möchtest du tun?", false, _session);
             }
             else if (input.Request is IntentRequest)
             {
-                if (intent.Intent.Name.Equals("SetSpeedIntent"))
+                if (intent.Intent.Name.Equals("MultipleDirectivesIntent"))
+                {
+                    isMultipleCommands = true;
+                    _session.Attributes["isMultipleCommands"] = true;
+
+                    return createAnswer("Sage immer einen Befehl nach dem anderen und warte bis ich dich nach dem nächsten Frage. Sobald du fertig bis sag einfach: Alexa senden", false, _session);
+
+                }
+                else if (intent.Intent.Name.Equals("SendMultipleDirectivesIntent"))
+                {
+                    isMultipleCommands = false;
+                    _session.Attributes["isMultipleCommands"] = false;
+                    _session.Attributes["cmdPallete"] = new CommandPalette();
+
+                    return createRoboterRequest($"Ich schicke {cmdPallete.DirectiveCount} Befehle an den Roboter.", endpoint.EndpointId, "control", cmdPallete, _session);
+                }
+                else if (intent.Intent.Name.Equals("SetSpeedIntent"))
                 {
                     SpeedData speedData = new SpeedData();
 
@@ -76,7 +121,7 @@ namespace mindstormsFunction
 
                     if (intent.Intent.Slots["Speed"].Value.Equals("?"))
                     {
-                        return createAnswer("Ich habe die von dir angegebene Geschwindkeit nicht verstanden. Bitte wiederhole den Satz.");
+                        return createAnswer("Ich habe die von dir angegebene Geschwindkeit nicht verstanden. Bitte wiederhole den Satz.", false, _session);
                     }
                     else
                     {
@@ -84,11 +129,7 @@ namespace mindstormsFunction
 
                         if (_speedVal >= 0 || _speedVal <= 100)
                         {
-                            speedData.Speed = Convert.ToInt32(intent.Intent.Slots["Speed"].Value);
-
-                            //Check if Attributes exists
-                            if (_session.Attributes == null)
-                                _session.Attributes = new Dictionary<string, object>();
+                            speedData.Speed = Convert.ToInt32(_speedVal);
 
                             //Set or Add Session Attribute
                             if (_session.Attributes.ContainsKey("Speed"))
@@ -99,7 +140,7 @@ namespace mindstormsFunction
                         }
                         else
                         {
-                            return createAnswer("Die Geschwindigkeit darf nur in einem Bereich zwischen 1 und 100 liegen. Bitte wiederhole deine Aussage, mit einem korrekten Wert.");
+                            return createAnswer("Die Geschwindigkeit darf nur in einem Bereich zwischen 1 und 100 liegen. Bitte wiederhole deine Aussage, mit einem korrekten Wert.", false, _session);
                         }
 
                     }
@@ -107,7 +148,19 @@ namespace mindstormsFunction
                     //Create directive for the Robot
                     SendDirective directive = new SendDirective(endpoint.EndpointId, "Custom.Mindstorms.Gadget", "control", speedData);
 
-                    return createRoboterRequest("Die Geschwindkeit wurde gesetzt", endpoint.EndpointId, "control", speedData, _session);
+                    if (isMultipleCommands)
+                    {
+                        cmdPallete.Directives.Add(directive);
+                        cmdPallete.DirectiveCount = cmdPallete.Directives.Count;
+
+                        _session.Attributes["cmdPallete"] = cmdPallete;
+
+                        return createAnswer("Der Speed Befehl wurde hinzugefügt. Es wird der nächste erwartet.", false, _session);
+                    }
+                    else
+                    {
+                        return createRoboterRequest("Die Geschwindigkeit wurde gesetzt", endpoint.EndpointId, "control", speedData, _session);
+                    }
                 }
                 else if (intent.Intent.Name.Equals("MoveIntent"))
                 {
@@ -129,7 +182,7 @@ namespace mindstormsFunction
                     //Get Direction Slot Value
                     if (intent.Intent.Slots["Direction"].Value.Equals(""))
                     {
-                        return createAnswer("Ich habe nicht verstanden, in welche Richtung sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.");
+                        return createAnswer("Ich habe nicht verstanden, in welche Richtung sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.", false, _session);
                     }
                     else
                     {
@@ -150,15 +203,28 @@ namespace mindstormsFunction
                     //Get Duration Slot Value
                     if (intent.Intent.Slots["Duration"].Value.Equals("?"))
                     {
-                        return createAnswer("Ich habe nicht verstanden, wie lange sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.");
+                        return createAnswer("Ich habe nicht verstanden, wie lange sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.", false, _session);
                     }
                     else
                     {
                         dirData.Duration = Convert.ToInt32(intent.Intent.Slots["Duration"].Value);
                     }
 
-                    //Befehl erstellen
-                    return createRoboterRequest("Der Roboter wird bewegt!", endpoint.EndpointId, "control", dirData, _session);
+                    //Create directive for the Robot
+                    SendDirective directive = new SendDirective(endpoint.EndpointId, "Custom.Mindstorms.Gadget", "control", dirData);
+
+                    if (isMultipleCommands)
+                    {
+                        cmdPallete.Directives.Add(directive);
+                        cmdPallete.DirectiveCount = cmdPallete.Directives.Count;
+                        _session.Attributes["cmdPallete"] = cmdPallete;
+
+                        return createAnswer("Der Move Befehl wurde hinzugefügt. Es wird der nächste erwartet.", false, _session);
+                    }
+                    else
+                    {
+                        return createRoboterRequest("Der Roboter wird bewegt!", endpoint.EndpointId, "control", dirData, _session);
+                    }
 
                 }
                 else if (intent.Intent.Name.Equals("DirectionTurnIntent"))
@@ -183,7 +249,7 @@ namespace mindstormsFunction
                     }
                     else
                     {
-                        return createAnswer("Ich habe nicht verstanden, in welche Richtung sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.");
+                        return createAnswer("Ich habe nicht verstanden, in welche Richtung sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.", false, _session);
                     }
 
                     //Duration
@@ -193,15 +259,29 @@ namespace mindstormsFunction
                     }
                     else
                     {
-                        return createAnswer("Ich habe nicht verstanden, wie lange sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.");
+                        return createAnswer("Ich habe nicht verstanden, wie lange sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.", false, _session);
                     }
 
-                    return createRoboterRequest($"Der Roboter wird nach {dirData.Direction} gedreht.", endpoint.EndpointId, "control", dirData, _session);
+                    //Create directive for the Robot
+                    SendDirective directive = new SendDirective(endpoint.EndpointId, "Custom.Mindstorms.Gadget", "control", dirData);
+
+                    if (isMultipleCommands)
+                    {
+                        cmdPallete.Directives.Add(directive);
+                        cmdPallete.DirectiveCount = cmdPallete.Directives.Count;
+                        _session.Attributes["cmdPallete"] = cmdPallete;
+
+                        return createAnswer("Der Move Befehl wurde hinzugefügt. Es wird der nächste erwartet.", false, _session);
+                    }
+                    else
+                    {
+                        return createRoboterRequest($"Der Roboter wird nach {dirData.Direction} gedreht.", endpoint.EndpointId, "control", dirData, _session);
+                    }
 
                 }
                 else if (intent.Intent.Name.Equals("DegreeTurnIntent"))
                 {
-                    return createAnswer("DegreeTurn Intent wurde aufgerufen!");
+                    return createAnswer("DegreeTurn Intent wurde aufgerufen!", false, _session);
                 }
                 else if (intent.Intent.Name.Equals("LetGoIntent"))
                 {
@@ -241,12 +321,12 @@ namespace mindstormsFunction
                 }
                 else
                 {
-                    return createAnswer("Es wurde ein nicht abgefangener Intent aufgerufen! " + intent.Intent.Name);
+                    return createAnswer("Es wurde ein nicht abgefangener Intent aufgerufen! " + intent.Intent.Name, false, _session);
                 }
             }
             else
             {
-                return createAnswer("Der Skill wurde nicht über einen LaunchRequest oder IntentRequest gestartet.", true);
+                return createAnswer("Der Skill wurde nicht über einen LaunchRequest oder IntentRequest gestartet.", true, _session);
             }
 
         }
@@ -259,27 +339,51 @@ namespace mindstormsFunction
             switch (error.Error.Type)
             {
                 case ErrorType.InvalidResponse:
-                    return createAnswer("Fehler.", false, "hmmm", message);
+                    return createAnswer("Fehler.", false, _session, "hmmm", message);
                 case ErrorType.DeviceCommunicationError:
-                    return createAnswer("Fehler.", false, "hmmm", message);
+                    return createAnswer("Fehler.", false, _session, "hmmm", message);
                 case ErrorType.InternalError:
-                    return createAnswer("Fehler.", false, "hmmm", message);
+                    return createAnswer("Fehler.", false, _session, "hmmm", message);
                 case ErrorType.MediaErrorUnknown:
-                    return createAnswer("Fehler.", false, "hmmm", message);
+                    return createAnswer("Fehler.", false, _session, "hmmm", message);
                 case ErrorType.InvalidMediaRequest:
-                    return createAnswer("Fehler.", false, "hmmm", message);
+                    return createAnswer("Fehler.", false, _session, "hmmm", message);
                 case ErrorType.MediaServiceUnavailable:
-                    return createAnswer("Fehler.", false, "hmmm", message);
+                    return createAnswer("Fehler.", false, _session, "hmmm", message);
                 case ErrorType.InternalServerError:
-                    return createAnswer("Fehler.", false, "hmmm", message);
+                    return createAnswer("Fehler.", false, _session, "hmmm", message);
                 case ErrorType.InternalDeviceError:
-                    return createAnswer("Fehler.", false, "hmmm", message);
+                    return createAnswer("Fehler.", false, _session, "hmmm", message);
                 default:
-                    return createAnswer("Fehler.", false, "hmmm", message);
+                    return createAnswer("Fehler.", false, _session, "hmmm", message);
             }
 
         }
 
+
+        private SkillResponse createMultipleRoboterRequests(String answer, String endpointID, String nsName, dynamic directives, Session _session)
+        {
+
+            // create the speech response
+            var speech = new SsmlOutputSpeech();
+            speech.Ssml = $"<speak>{answer}</speak>";
+
+            //ResponseBody vorbereiten
+            ResponseBody responseBody = new ResponseBody();
+            responseBody.OutputSpeech = speech;
+            responseBody.ShouldEndSession = false;
+            responseBody.Reprompt = new Reprompt("Was möchtest du tun?");
+            responseBody.Card = new SimpleCard { Title = "Debugging", Content = "Move Robot" };
+            responseBody.Directives = directives as IList<IDirective>;
+
+            //Antwort vorbereiten
+            var skillResponse = new SkillResponse();
+            skillResponse.SessionAttributes = _session.Attributes;
+            skillResponse.Version = "1.0";
+            skillResponse.Response = responseBody;
+            return skillResponse;
+
+        }
 
         private SkillResponse createRoboterRequest(String answer, String endpointID, String nsName, dynamic data, Session _session)
         {
@@ -308,7 +412,7 @@ namespace mindstormsFunction
 
         }
 
-        private SkillResponse createAnswer(String answer = "Hey, das ist ein Test", bool endSession = false, String repromptText = "Ich höre zu!", String bodyTitle = "Debugging", String content = "Debugging and Testing Alexa")
+        private SkillResponse createAnswer(String answer, bool endSession, Session _session, String repromptText = "Ich höre zu!", String bodyTitle = "Debugging", String content = "Debugging and Testing Alexa")
         {
 
             // create the speech response
@@ -322,6 +426,7 @@ namespace mindstormsFunction
             responseBody.Card = new SimpleCard { Title = bodyTitle, Content = "No directive" };
 
             var skillResponse = new SkillResponse();
+            skillResponse.SessionAttributes = _session.Attributes;
             skillResponse.Response = responseBody;
             skillResponse.Version = "1.0";
 

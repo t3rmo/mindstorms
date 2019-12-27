@@ -13,6 +13,9 @@ namespace mindstormsFunction.obj
 
         [JsonProperty("command")]
         public string Command { get; set; } = "";
+        
+        [JsonProperty(PropertyName = "count")]
+        public int DirectiveCount { get; set; } = 1;
 
     }
 
@@ -30,6 +33,9 @@ namespace mindstormsFunction.obj
 
         [JsonProperty("duration")]
         public int Duration { get; set; } = 1;
+        
+        [JsonProperty(PropertyName = "count")]
+        public int DirectiveCount { get; set; } = 1;
 
     }
 }

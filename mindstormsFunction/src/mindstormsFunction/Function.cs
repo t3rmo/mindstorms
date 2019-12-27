@@ -102,7 +102,7 @@ namespace mindstormsFunction
                     isMultipleCommands = true;
                     _session.Attributes["isMultipleCommands"] = true;
 
-                    return createAnswer("Sage immer einen Befehl nach dem anderen und warte bis ich dich nach dem nächsten Frage. Sobald du fertig bis sag einfach: Alexa senden", false, _session);
+                    return createAnswer("Sage immer einen Befehl und warte bis ich dich nach dem nächsten Frage. Sobald du fertig bis sag einfach: Alexa senden", false, _session);
 
                 }
                 else if (intent.Intent.Name.Equals("SendMultipleDirectivesIntent"))
@@ -145,12 +145,10 @@ namespace mindstormsFunction
 
                     }
 
-                    //Create directive for the Robot
-                    SendDirective directive = new SendDirective(endpoint.EndpointId, "Custom.Mindstorms.Gadget", "control", speedData);
-
                     if (isMultipleCommands)
                     {
-                        cmdPallete.Directives.Add(directive);
+
+                        cmdPallete.Directives.Add(speedData);
                         cmdPallete.DirectiveCount = cmdPallete.Directives.Count;
 
                         _session.Attributes["cmdPallete"] = cmdPallete;
@@ -210,12 +208,9 @@ namespace mindstormsFunction
                         dirData.Duration = Convert.ToInt32(intent.Intent.Slots["Duration"].Value);
                     }
 
-                    //Create directive for the Robot
-                    SendDirective directive = new SendDirective(endpoint.EndpointId, "Custom.Mindstorms.Gadget", "control", dirData);
-
                     if (isMultipleCommands)
                     {
-                        cmdPallete.Directives.Add(directive);
+                        cmdPallete.Directives.Add(dirData);
                         cmdPallete.DirectiveCount = cmdPallete.Directives.Count;
                         _session.Attributes["cmdPallete"] = cmdPallete;
 
@@ -262,12 +257,9 @@ namespace mindstormsFunction
                         return createAnswer("Ich habe nicht verstanden, wie lange sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.", false, _session);
                     }
 
-                    //Create directive for the Robot
-                    SendDirective directive = new SendDirective(endpoint.EndpointId, "Custom.Mindstorms.Gadget", "control", dirData);
-
                     if (isMultipleCommands)
                     {
-                        cmdPallete.Directives.Add(directive);
+                        cmdPallete.Directives.Add(dirData);
                         cmdPallete.DirectiveCount = cmdPallete.Directives.Count;
                         _session.Attributes["cmdPallete"] = cmdPallete;
 
@@ -357,31 +349,6 @@ namespace mindstormsFunction
                 default:
                     return createAnswer("Fehler.", false, _session, "hmmm", message);
             }
-
-        }
-
-
-        private SkillResponse createMultipleRoboterRequests(String answer, String endpointID, String nsName, dynamic directives, Session _session)
-        {
-
-            // create the speech response
-            var speech = new SsmlOutputSpeech();
-            speech.Ssml = $"<speak>{answer}</speak>";
-
-            //ResponseBody vorbereiten
-            ResponseBody responseBody = new ResponseBody();
-            responseBody.OutputSpeech = speech;
-            responseBody.ShouldEndSession = false;
-            responseBody.Reprompt = new Reprompt("Was möchtest du tun?");
-            responseBody.Card = new SimpleCard { Title = "Debugging", Content = "Move Robot" };
-            responseBody.Directives = directives as IList<IDirective>;
-
-            //Antwort vorbereiten
-            var skillResponse = new SkillResponse();
-            skillResponse.SessionAttributes = _session.Attributes;
-            skillResponse.Version = "1.0";
-            skillResponse.Response = responseBody;
-            return skillResponse;
 
         }
 

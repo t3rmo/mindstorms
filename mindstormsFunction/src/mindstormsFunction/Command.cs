@@ -22,7 +22,13 @@ namespace mindstormsFunction
 
     public class CommandPalette
     {
-        [JsonProperty(PropertyName = "directives")]
+        [JsonProperty(PropertyName = "type")]
+        public string CommandType { get; set; } = "command";
+
+        [JsonProperty(PropertyName = "command")]
+        public string CmdName { get; set; } = "";
+
+        [JsonProperty(PropertyName = "dirs")]
         public List<dynamic> Directives { get; set; } = new List<dynamic>();
 
         [JsonProperty(PropertyName = "count")]

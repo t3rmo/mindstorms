@@ -203,6 +203,22 @@ namespace mindstormsFunction
                 {
                     return createAnswer("DegreeTurn Intent wurde aufgerufen!");
                 }
+                else if (intent.Intent.Name.Equals("LetGoIntent"))
+                {
+                    Command cmd = new Command();
+                    cmd.CommandType = "command";
+                    cmd.CmdName = "loslassen";
+
+                    return createRoboterRequest("Gegenstand wird losgelassen.", endpoint.EndpointId, "control", cmd, _session);
+                }
+                else if (intent.Intent.Name.Equals("GrabIntent"))
+                {
+                    Command cmd = new Command();
+                    cmd.CommandType = "command";
+                    cmd.CmdName = "nimm";
+
+                    return createRoboterRequest("Gegenstand wird aufgehoben.", endpoint.EndpointId, "control", cmd, _session);
+                }
                 else if (intent.Intent.Name.Equals("AMAZON.FallbackIntent"))
                 {
                     return createEndAnswer("Fallbackintent wurde aufgerufen!");

@@ -68,7 +68,7 @@ namespace mindstormsFunction
             //Sicher gehen, dass eine Verbindung steht
             if (endpoints.Endpoints.Length <= 0)
             {
-                return createAnswer("Ich konnte keine Verbundenen Geräte finden.", true, _session);
+                return createEndAnswer("Ich konnte keine Verbundenen Geräte finden.");
             }
 
             //Verbundenes Gerät aus Liste holen

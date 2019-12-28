@@ -10,6 +10,9 @@ namespace mindstormsFunction
 {
     public class Command
     {
+        [JsonProperty(PropertyName = "islist")]
+        public bool isList { get; } = false;
+
         [JsonProperty(PropertyName = "type")]
         public string CommandType { get; set; } = "command";
 
@@ -22,6 +25,10 @@ namespace mindstormsFunction
 
     public class CommandPalette
     {
+
+        [JsonProperty(PropertyName = "islist")]
+        public bool isList { get; } = true;
+
         [JsonProperty(PropertyName = "type")]
         public string CommandType { get; set; } = "command";
 

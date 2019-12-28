@@ -1,26 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\NoChance\\Desktop\\mindstorms\\mindstormsFunction\\src\\mindstormsFunction\\mindstormsFunction.csproj": {}
+    "c:\\Users\\rauhm\\Desktop\\mindstorms\\mindstormsFunction\\src\\mindstormsFunction\\mindstormsFunction.csproj": {}
   },
   "projects": {
-    "C:\\Users\\NoChance\\Desktop\\mindstorms\\mindstormsFunction\\src\\mindstormsFunction\\mindstormsFunction.csproj": {
+    "c:\\Users\\rauhm\\Desktop\\mindstorms\\mindstormsFunction\\src\\mindstormsFunction\\mindstormsFunction.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\NoChance\\Desktop\\mindstorms\\mindstormsFunction\\src\\mindstormsFunction\\mindstormsFunction.csproj",
+        "projectUniqueName": "c:\\Users\\rauhm\\Desktop\\mindstorms\\mindstormsFunction\\src\\mindstormsFunction\\mindstormsFunction.csproj",
         "projectName": "mindstormsFunction",
-        "projectPath": "C:\\Users\\NoChance\\Desktop\\mindstorms\\mindstormsFunction\\src\\mindstormsFunction\\mindstormsFunction.csproj",
-        "packagesPath": "C:\\Users\\NoChance\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\NoChance\\Desktop\\mindstorms\\mindstormsFunction\\src\\mindstormsFunction\\obj\\",
+        "projectPath": "c:\\Users\\rauhm\\Desktop\\mindstorms\\mindstormsFunction\\src\\mindstormsFunction\\mindstormsFunction.csproj",
+        "packagesPath": "C:\\Users\\rauhm\\.nuget\\packages\\",
+        "outputPath": "c:\\Users\\rauhm\\Desktop\\mindstorms\\mindstormsFunction\\src\\mindstormsFunction\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
-          "C:\\Microsoft\\Xamarin\\NuGet\\",
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
         ],
         "configFilePaths": [
-          "C:\\Users\\NoChance\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Xamarin.Offline.config"
+          "C:\\Users\\rauhm\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
           "netcoreapp2.1"

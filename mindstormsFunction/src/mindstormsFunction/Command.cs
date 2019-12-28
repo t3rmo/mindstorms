@@ -32,6 +32,6 @@ namespace mindstormsFunction
         public List<dynamic> Directives { get; set; } = new List<dynamic>();
 
         [JsonProperty(PropertyName = "count")]
-        public int DirectiveCount { get; set; } = 1;
+        public int DirectiveCount { get; set; } = 0;
     }
 }

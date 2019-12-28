@@ -102,16 +102,24 @@ namespace mindstormsFunction
                     isMultipleCommands = true;
                     _session.Attributes["isMultipleCommands"] = true;
 
-                    return createAnswer("Sage immer einen Befehl und warte bis ich dich nach dem nächsten Frage. Sobald du fertig bis sag einfach: Alexa senden", false, _session);
+                    return createAnswer("Sage immer einen Befehl und warte bis ich dich nach dem nächsten Frage. Sobald du fertig bis sag einfach: Senden", false, _session);
 
                 }
                 else if (intent.Intent.Name.Equals("SendMultipleDirectivesIntent"))
                 {
-                    isMultipleCommands = false;
-                    _session.Attributes["isMultipleCommands"] = false;
-                    _session.Attributes["cmdPallete"] = new CommandPalette();
+                    if (cmdPallete.DirectiveCount >= 1)
+                    {
+                        isMultipleCommands = false;
+                        _session.Attributes["isMultipleCommands"] = false;
+                        _session.Attributes["cmdPallete"] = new CommandPalette();
 
-                    return createRoboterRequest($"Ich schicke {cmdPallete.DirectiveCount} Befehle an den Roboter.", endpoint.EndpointId, "control", cmdPallete, _session);
+                        return createRoboterRequest($"Ich schicke {cmdPallete.DirectiveCount} Befehle an den Roboter.", endpoint.EndpointId, "control", cmdPallete, _session);
+                    }
+                    else
+                    {
+                        return createAnswer("Es sind keine Anfragen verfügbar, welche gesendet werden können. Um Anfragen hinzuzufügen sage dazu einfach: Ich möchte mehrere Anfragen senden.", false, _session);
+                    }
+
                 }
                 else if (intent.Intent.Name.Equals("SetSpeedIntent"))
                 {

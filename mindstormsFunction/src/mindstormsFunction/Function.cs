@@ -263,7 +263,7 @@ namespace mindstormsFunction
                         cmdPallete.DirectiveCount = cmdPallete.Directives.Count;
                         _session.Attributes["cmdPallete"] = cmdPallete;
 
-                        return createAnswer("Der Move Befehl wurde hinzugefügt. Es wird der nächste erwartet.", false, _session);
+                        return createAnswer("Der drehen Befehl wurde hinzugefügt. Es wird der nächste erwartet.", false, _session);
                     }
                     else
                     {
@@ -281,7 +281,19 @@ namespace mindstormsFunction
                     cmd.CommandType = "command";
                     cmd.CmdName = "loslassen";
 
-                    return createRoboterRequest("Gegenstand wird losgelassen.", endpoint.EndpointId, "control", cmd, _session);
+                    if (isMultipleCommands)
+                    {
+                        cmdPallete.Directives.Add(cmd);
+                        cmdPallete.DirectiveCount = cmdPallete.Directives.Count;
+                        _session.Attributes["cmdPallete"] = cmdPallete;
+
+                        return createAnswer("Der Loslassen Befehl wurde hinzugefügt. Es wird der nächste erwartet.", false, _session);
+                    }
+                    else
+                    {
+                        return createRoboterRequest("Gegenstand wird losgelassen.", endpoint.EndpointId, "control", cmd, _session);
+                    }
+
                 }
                 else if (intent.Intent.Name.Equals("GrabIntent"))
                 {
@@ -289,7 +301,19 @@ namespace mindstormsFunction
                     cmd.CommandType = "command";
                     cmd.CmdName = "nimm";
 
-                    return createRoboterRequest("Gegenstand wird aufgehoben.", endpoint.EndpointId, "control", cmd, _session);
+                    if (isMultipleCommands)
+                    {
+                        cmdPallete.Directives.Add(cmd);
+                        cmdPallete.DirectiveCount = cmdPallete.Directives.Count;
+                        _session.Attributes["cmdPallete"] = cmdPallete;
+
+                        return createAnswer("Der Nimm Befehl wurde hinzugefügt. Es wird der nächste erwartet.", false, _session);
+                    }
+                    else
+                    {
+                        return createRoboterRequest("Gegenstand wird aufgehoben.", endpoint.EndpointId, "control", cmd, _session);
+                    }
+
                 }
                 else if (intent.Intent.Name.Equals("AMAZON.FallbackIntent"))
                 {
@@ -305,6 +329,7 @@ namespace mindstormsFunction
                 }
                 else if (intent.Intent.Name.Equals("AMAZON.StopIntent"))
                 {
+                    cmdPallete = new CommandPalette();
                     return createEndAnswer("Okay, tschüss");
                 }
                 else if (intent.Intent.Name.Equals("AMAZON.NavigateHomeIntent"))

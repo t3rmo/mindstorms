@@ -35,29 +35,6 @@ namespace mindstormsFunction
             //Intent holen
             IntentRequest intent = input.Request as IntentRequest;
 
-            //Check if the intent is a Amazon Intent
-            if (intent.Intent.Name.Equals("AMAZON.FallbackIntent"))
-            {
-                return createEndAnswer("Fallbackintent wurde aufgerufen!");
-            }
-            else if (intent.Intent.Name.Equals("AMAZON.CancelIntent"))
-            {
-                return createEndAnswer("Cancel Intent wurde aufgerufen!");
-            }
-            else if (intent.Intent.Name.Equals("AMAZON.HelpIntent"))
-            {
-                return createEndAnswer("Help wurde aufgerufen!");
-            }
-            else if (intent.Intent.Name.Equals("AMAZON.StopIntent"))
-            {
-                cmdPallete = new CommandPalette();
-                return createEndAnswer("Okay, tschüss");
-            }
-            else if (intent.Intent.Name.Equals("AMAZON.NavigateHomeIntent"))
-            {
-                return createEndAnswer("Navigate Home wurde aufgerufen!");
-            }
-
             //Get Endpoint
             EndpointApi api = new EndpointApi(input);
             EndpointResponse endpoints = api.GetEndpoints().Result;
@@ -341,6 +318,27 @@ namespace mindstormsFunction
                         return createRoboterRequest("Gegenstand wird aufgehoben.", endpoint.EndpointId, "control", cmd, _session);
                     }
 
+                }
+                else if (intent.Intent.Name.Equals("AMAZON.FallbackIntent"))
+                {
+                    return createEndAnswer("Fallbackintent wurde aufgerufen!");
+                }
+                else if (intent.Intent.Name.Equals("AMAZON.CancelIntent"))
+                {
+                    return createEndAnswer("Cancel Intent wurde aufgerufen!");
+                }
+                else if (intent.Intent.Name.Equals("AMAZON.HelpIntent"))
+                {
+                    return createEndAnswer("Help wurde aufgerufen!");
+                }
+                else if (intent.Intent.Name.Equals("AMAZON.StopIntent"))
+                {
+                    cmdPallete = new CommandPalette();
+                    return createEndAnswer("Okay, tschüss");
+                }
+                else if (intent.Intent.Name.Equals("AMAZON.NavigateHomeIntent"))
+                {
+                    return createEndAnswer("Navigate Home wurde aufgerufen!");
                 }
                 else
                 {

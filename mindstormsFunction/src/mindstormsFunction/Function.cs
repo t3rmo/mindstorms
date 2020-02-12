@@ -37,7 +37,16 @@ namespace mindstormsFunction
 
             //Get Endpoint
             EndpointApi api = new EndpointApi(input);
-            EndpointResponse endpoints = api.GetEndpoints().Result;
+            EndpointResponse endpoints = new EndpointResponse();
+            try
+            {
+                endpoints = api.GetEndpoints().Result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return createEndAnswer("Es wurden keine verbundenen Geräte gefunden.");
+            }
 
             //Session for SessionAttributes
             _session = input.Session;
@@ -113,15 +122,13 @@ namespace mindstormsFunction
                     }
                     else
                     {
-                        return createAnswer("Es sind keine Anfragen verfügbar, welche gesendet werden können. Um Anfragen hinzuzufügen sage dazu einfach: Ich möchte mehrere Anfragen senden.", false, _session);
+                        return createAnswer("Es sind keine Anfragen verfügbar, welche gesendet werden können. Um Anfragen hinzuzufügen sage dazu einfach: Ich möchte mehrere Anfragen senden.", false, _session, "Was möchtest du nun tun?");
                     }
 
                 }
                 else if (intent.Intent.Name.Equals("SetSpeedIntent"))
                 {
                     SpeedData speedData = new SpeedData();
-
-                    speedData.Command = "speed";
 
                     if (intent.Intent.Slots["Speed"].Value.Equals("?"))
                     {
@@ -168,62 +175,57 @@ namespace mindstormsFunction
                 {
                     DirectionData dirData = new DirectionData();
 
-                    //Attributes Checkup
-                    if (_session.Attributes.ContainsKey("Speed"))
+                    try
                     {
-                        dirData.Speed = Convert.ToInt32(_session.Attributes["Speed"]);
-                    }
-                    else
-                    {
-                        dirData.Speed = 100;
-                        _session.Attributes.Add("Speed", 100);
-                    }
-
-                    dirData.CommandType = "move"; //Placeholder
-
-                    //Get Direction Slot Value
-                    if (intent.Intent.Slots["Direction"].Value.Equals(""))
-                    {
-                        return createAnswer("Ich habe nicht verstanden, in welche Richtung sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.", false, _session);
-                    }
-                    else
-                    {
-                        if (intent.Intent.Slots["Direction"].Value == "gerade aus" || intent.Intent.Slots["Direction"].Value == "vorwärts")
+                        //Get Direction Slot Value
+                        if (intent.Intent.Slots["Direction"].Value.Equals(""))
                         {
-                            dirData.Direction = "forward";
-                        }
-                        else if (intent.Intent.Slots["Direction"].Value == "geradeaus")
-                        {
-                            dirData.Direction = "forward";
+                            return createAnswer("Ich habe nicht verstanden, in welche Richtung sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.", false, _session);
                         }
                         else
                         {
-                            dirData.Direction = intent.Intent.Slots["Direction"].Value;
+                            if (intent.Intent.Slots["Direction"].Value == "gerade aus" || intent.Intent.Slots["Direction"].Value == "vorwärts")
+                            {
+                                dirData.Direction = "forward";
+                            }
+                            else if (intent.Intent.Slots["Direction"].Value == "geradeaus")
+                            {
+                                dirData.Direction = "forward";
+                            }
+                            else
+                            {
+                                dirData.Direction = intent.Intent.Slots["Direction"].Value;
+                            }
+                        }
+
+                        //Get Duration Slot Value
+                        if (intent.Intent.Slots["Duration"].Value.Equals("?"))
+                        {
+                            return createAnswer("Ich habe nicht verstanden, wie lange sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.", false, _session);
+                        }
+                        else
+                        {
+                            dirData.Duration = Convert.ToInt32(intent.Intent.Slots["Duration"].Value);
+                        }
+
+                        if (isMultipleCommands)
+                        {
+                            cmdPallete.Directives.Add(dirData);
+                            cmdPallete.DirectiveCount = cmdPallete.Directives.Count;
+                            _session.Attributes["cmdPallete"] = cmdPallete;
+
+                            return createAnswer("Der Move Befehl wurde hinzugefügt. Es wird der nächste erwartet.", false, _session);
+                        }
+                        else
+                        {
+                            return createRoboterRequest("Der Roboter wird bewegt!", endpoint.EndpointId, "control", dirData, _session);
                         }
                     }
-
-                    //Get Duration Slot Value
-                    if (intent.Intent.Slots["Duration"].Value.Equals("?"))
+                    catch (Exception)
                     {
-                        return createAnswer("Ich habe nicht verstanden, wie lange sich der Roboter bewegen soll. Bitte wiederhole den ganzen Satz.", false, _session);
-                    }
-                    else
-                    {
-                        dirData.Duration = Convert.ToInt32(intent.Intent.Slots["Duration"].Value);
+                        return createAnswer("Um den Roboter zu bewegen, musst du eine Richtung als auch eine Dauer sagen. Versuche es einfach nochmal.", false, _session, "Ich warte auf einen Befehl", "Fehlende Parameter beim Move Intent", "Richtung und Geschwindigkeit");
                     }
 
-                    if (isMultipleCommands)
-                    {
-                        cmdPallete.Directives.Add(dirData);
-                        cmdPallete.DirectiveCount = cmdPallete.Directives.Count;
-                        _session.Attributes["cmdPallete"] = cmdPallete;
-
-                        return createAnswer("Der Move Befehl wurde hinzugefügt. Es wird der nächste erwartet.", false, _session);
-                    }
-                    else
-                    {
-                        return createRoboterRequest("Der Roboter wird bewegt!", endpoint.EndpointId, "control", dirData, _session);
-                    }
 
                 }
                 else if (intent.Intent.Name.Equals("DirectionTurnIntent"))
@@ -321,24 +323,25 @@ namespace mindstormsFunction
                 }
                 else if (intent.Intent.Name.Equals("AMAZON.FallbackIntent"))
                 {
-                    return createEndAnswer("Fallbackintent wurde aufgerufen!");
+                    return createAnswer("Du hast da wohl was vergessen. Wenn du den Roboter bewegen willst, musst du Richtung und Dauer angeben. Versuche es noch einmal?", false, _session, "Was möchtest du tun?");
                 }
                 else if (intent.Intent.Name.Equals("AMAZON.CancelIntent"))
                 {
-                    return createEndAnswer("Cancel Intent wurde aufgerufen!");
+                    return createAnswer("Die Aktion wird abgebrochen. Was möchtest du tun?", false, _session, "Ich warte auf den nächsten Befehl.");
                 }
                 else if (intent.Intent.Name.Equals("AMAZON.HelpIntent"))
                 {
-                    return createEndAnswer("Help wurde aufgerufen!");
+                    return createEndAnswer("Du kannst den Roboter nach vorne, links oder rechts bewegen. Die Geschwindkeit kannst du ebenfalls Anpassen."
+                    + "Der Roboter ist auch in der Lage Gegestände aufzuheben oder abzulegen. Versuche ganz natürlich dem Roboter einen dieser Befehle zu sagen");
                 }
                 else if (intent.Intent.Name.Equals("AMAZON.StopIntent"))
                 {
                     cmdPallete = new CommandPalette();
-                    return createEndAnswer("Okay, tschüss");
+                    return createEndAnswer("Bis zum nächsten mal.");
                 }
                 else if (intent.Intent.Name.Equals("AMAZON.NavigateHomeIntent"))
                 {
-                    return createEndAnswer("Navigate Home wurde aufgerufen!");
+                    return createEndAnswer("Der Skill wird beendet.");
                 }
                 else
                 {
@@ -347,7 +350,7 @@ namespace mindstormsFunction
             }
             else
             {
-                return createAnswer("Der Skill wurde nicht über einen LaunchRequest oder IntentRequest gestartet.", true, _session);
+                return createAnswer("Der Skill wurde nicht über einen LaunchRequest oder IntentRequest aufgerufen.", true, _session);
             }
 
         }
@@ -408,7 +411,7 @@ namespace mindstormsFunction
 
         }
 
-        private SkillResponse createAnswer(String answer, bool endSession, Session _session, String repromptText = "Ich höre zu!", String bodyTitle = "Debugging", String content = "Debugging and Testing Alexa")
+        private SkillResponse createAnswer(String answer, bool endSession, Session _session, String repromptText = "Ich höre zu!", String bodyTitle = "Message", String content = "Everthing is working fine :)")
         {
 
             // create the speech response
@@ -419,7 +422,7 @@ namespace mindstormsFunction
             var responseBody = new ResponseBody();
             responseBody.OutputSpeech = speech;
             responseBody.Reprompt = new Reprompt(repromptText);
-            responseBody.Card = new SimpleCard { Title = bodyTitle, Content = "No directive" };
+            responseBody.Card = new SimpleCard { Title = bodyTitle, Content = content };
 
             var skillResponse = new SkillResponse();
             skillResponse.SessionAttributes = _session.Attributes;
@@ -429,7 +432,7 @@ namespace mindstormsFunction
             return skillResponse;
         }
 
-        private SkillResponse createEndAnswer(String answer = "Hey, das ist ein Test")
+        private SkillResponse createEndAnswer(String answer)
         {
 
             // create the speech response

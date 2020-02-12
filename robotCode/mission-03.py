@@ -105,7 +105,7 @@ class MindstormsGadget(AlexaGadget):
                         
                 if control_type == "move":
                     # Expected params: [direction, duration, speed]
-                    self._move(payload["direction"], int(payload["duration"]), int(payload["speed"]))
+                    self._move(payload["direction"], int(payload["duration"]), int(payload["speed"]), True)
 
                 if control_type == "command":
                     # Expected params: [command]
@@ -128,7 +128,7 @@ class MindstormsGadget(AlexaGadget):
 
                         if control_type == "command":
                             # Expected params: [command]
-                            self._activate(item["command"])
+                            self._activate(item["command"], item["speed"])
 
 
         except KeyError:
@@ -152,7 +152,7 @@ class MindstormsGadget(AlexaGadget):
 
         if direction in (Direction.RIGHT.value + Direction.LEFT.value):
             self._turn(direction, speed)
-            self.drive.on_for_seconds(SpeedPercent(speed), SpeedPercent(speed), duration, block=is_blocking)
+            #self.drive.on_for_seconds(SpeedPercent(speed), SpeedPercent(speed), duration, block=is_blocking)
 
 
     def _activate(self, command, speed=50):
@@ -164,10 +164,6 @@ class MindstormsGadget(AlexaGadget):
         print("Activate command: ({}, {})".format(command, speed), file=sys.stderr)
         if command in Command.MOVE_CIRCLE.value:
             self.drive.on_for_seconds(SpeedPercent(int(speed)), SpeedPercent(5), 12)
-
-        if command in Command.MOVE_SQUARE.value:
-            for i in range(4):
-                self._move("right", 2, speed, is_blocking=True)
 
         if command in Command.GRAB.value:
             self.hand.on_for_rotations(SpeedPercent(65), 100)
